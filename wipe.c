@@ -59,7 +59,7 @@ void wipeFile(char file[], int passes, int keepFile)
 		}
 }
 
-void handleFolder(char* path, int recurse, int passes, int maintain){
+void handleFolder(char* path, int recurse, int passes, int maintain,int removeRO){
 	DIR* dir;
 	struct dirent *ent;
 	if((dir=opendir(path)) != NULL){
@@ -70,7 +70,7 @@ void handleFolder(char* path, int recurse, int passes, int maintain){
 		strcat(fullPath,"/");
 		strcat(fullPath,ent->d_name);
 		if (recurse) {
-			handleFolder(fullPath,recurse,passes,maintain);
+			handleFolder(fullPath,recurse,passes,maintain,removeRO);
 		}
 	  }
 	  else if (ent->d_type == DT_REG) {
@@ -79,23 +79,32 @@ void handleFolder(char* path, int recurse, int passes, int maintain){
 		  strcat(fullPath,"/");
 		  strcat(fullPath,ent->d_name);
 		  printf("\nFile: %s",fullPath);
-		  //wipeFile(fullPath,passes,maintain);
+		  if (removeRO) {
+			removeAttribute(fullPath);
+		  }
+		  wipeFile(fullPath,passes,maintain);
 	  }
 	}
 	closedir(dir);
 	}
 }
 
+/*
+	Attempts to chmod-away RO attribute
+	Returns: 1 if successful
+*/
+int removeAttribute(char* fileName) {
+	return (chmod(fileName,strtol("0777",0,8)) == 0);
+}
 
 void main(int argc,char *argv[]) {
 	if (argc >= 2) {
 		// Get the filename
 		char *fileName = argv[argc-1];
-		// How many times the file will be overwritten
-		int passes = -1;
-		int count;
-		int keepFile = 0;
-		int recurse = 0;
+		
+		int keepFile, recurse, passes,count,removeRO;
+		keepFile = recurse = removeRO = 0;
+		passes = -1;
 		
 		// Loop through arguments and process
 		for (count = 0; count < argc; count++) {
@@ -113,23 +122,24 @@ void main(int argc,char *argv[]) {
 				passes = toInt(argv[count+1]);
 			}
 			else if (isEqual(argv[count],"-a")) {
-				int ret = chmod(fileName,strtol("0777",0,8));
+				removeRO = 1;
 			}
 			else if (isEqual(argv[count],"-r")) {
 				recurse = 1;
 			}
 		}
 		
-		printf("\ncwipe %s by Michael Cowell (2015)",VERSION);
+		printf("\nocwiper %s by Michael Cowell (2015)",VERSION);
 		if (passes == -1) {
 			printf("\nWARNING: You didn't specify a pass count - Set to 5.");
 			passes = 5;
 		}
 		printf("\nWipe will perform %d passes.",passes);
 		
-		handleFolder(fileName,recurse,passes,keepFile);
+		handleFolder(fileName,recurse,passes,keepFile,removeRO);
 	} else {
-		printf("\n\nUsage:\twipe [-p passes] [-k] [-q] [-a] [-r] target");
+		printf("\nocwiper %s by Michael Cowell (2015)\n",VERSION);
+		printf("\n\nUsage:\tocwiper [-p passes] [-k] [-q] [-a] [-r] target");
 		printf("\n\n\t-p passes\tWipe with X passes. (default is 5)");
 		printf("\n\t-k\t\tKeep File after shredding");
 		printf("\n\t-a\t\tRemove read-only attribute.");
