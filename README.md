@@ -7,10 +7,14 @@ Your hard drive/USB stick/floppy disk is a snitch. SDelete is a good application
 2. Cross platform
 3. Easily modifiable
 4. Usable with software built for SDelete (such as [my GUI](https://github.com/compl3x/SDelete2-FileGone))
+
+
 #### Building
-A script, build.sh, is included in the repo for quick build. it's basically just:
+A script, build.sh, is included in the repo for quick build, but it does nothing more than:
 
     gcc -o wipe wipe.c mtwist.c
+
+
 #### To-Do
 * ~~Directory support~~ DONE! 
 * ~~Recursive Directory support~~ DONE!
