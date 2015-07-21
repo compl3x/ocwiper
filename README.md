@@ -10,7 +10,7 @@ Your hard drive/USB stick/floppy disk is a snitch. SDelete is a good application
 
 #### Not yet implemented
 * ~~Directory support~~ DONE! 
-* Recursive Directory support
+* ~~Recursive Directory support~~ DONE!
 * -f command
 * Filename scrambling
 
@@ -24,5 +24,7 @@ Removes the read-only attribute from a file (and wipes it)
 Supress all output/errors
 ##### -p passes
 Overwrite the file a custom number of times (the default is 5, but there is no minimum
+##### -r
+Recurse through directories
 
 (c) Michael Cowell, 2015

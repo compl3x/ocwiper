@@ -7,7 +7,7 @@
 #include <dirent.h>
 
 #ifndef VERSION
-#define VERSION "1.07" 
+#define VERSION "1.09" 
 #endif
 
 int isEqual(char first[], char second[]) {
@@ -59,6 +59,34 @@ void wipeFile(char file[], int passes, int keepFile)
 		}
 }
 
+void handleFolder(char* path, int recurse, int passes, int maintain){
+	DIR* dir;
+	struct dirent *ent;
+	if((dir=opendir(path)) != NULL){
+	while (( ent = readdir(dir)) != NULL){
+	  if(ent->d_type == DT_DIR && strcmp(ent->d_name, ".") != 0  && strcmp(ent->d_name, "..") != 0){
+		char fullPath[5] = "";
+		strcat(fullPath,path);
+		strcat(fullPath,"/");
+		strcat(fullPath,ent->d_name);
+		if (recurse) {
+			handleFolder(fullPath,recurse,passes,maintain);
+		}
+	  }
+	  else if (ent->d_type == DT_REG) {
+		  char fullPath[5] = "";
+		  strcat(fullPath,path);
+		  strcat(fullPath,"/");
+		  strcat(fullPath,ent->d_name);
+		  printf("\nFile: %s",fullPath);
+		  //wipeFile(fullPath,passes,maintain);
+	  }
+	}
+	closedir(dir);
+	}
+}
+
+
 void main(int argc,char *argv[]) {
 	if (argc >= 2) {
 		// Get the filename
@@ -67,6 +95,7 @@ void main(int argc,char *argv[]) {
 		int passes = -1;
 		int count;
 		int keepFile = 0;
+		int recurse = 0;
 		
 		// Loop through arguments and process
 		for (count = 0; count < argc; count++) {
@@ -86,6 +115,9 @@ void main(int argc,char *argv[]) {
 			else if (isEqual(argv[count],"-a")) {
 				int ret = chmod(fileName,strtol("0777",0,8));
 			}
+			else if (isEqual(argv[count],"-r")) {
+				recurse = 1;
+			}
 		}
 		
 		printf("\ncwipe %s by Michael Cowell (2015)",VERSION);
@@ -95,34 +127,14 @@ void main(int argc,char *argv[]) {
 		}
 		printf("\nWipe will perform %d passes.",passes);
 		
-		// If the file is a directory, recurse and wipe first level
-		struct stat path;
-		stat(fileName,&path);
-		if (S_ISDIR(path.st_mode)) {
-			struct dirent *ep;
-			DIR *dp = opendir (fileName);
-			while (ep = readdir (dp)) {
-				stat(ep->d_name,&path);
-				if (S_ISREG(path.st_mode) && !S_ISDIR(path.st_mode)) {
-					char fullFileName[5] = "";
-					
-					// Make the full path
-					strcat(fullFileName,fileName);
-					strcat(fullFileName,"/");
-					strcat(fullFileName,ep->d_name);
-					wipeFile(fullFileName,passes,keepFile);
-				}
-			}
-			
-		} else {
-			wipeFile(fileName,passes,keepFile);
-		}
+		handleFolder(fileName,recurse,passes,keepFile);
 	} else {
-		printf("\n\nUsage:\twipe [-p passes] [-k] [-q] [-a] fileName");
+		printf("\n\nUsage:\twipe [-p passes] [-k] [-q] [-a] [-r] target");
 		printf("\n\n\t-p passes\tWipe with X passes. (default is 5)");
 		printf("\n\t-k\t\tKeep File after shredding");
 		printf("\n\t-a\t\tRemove read-only attribute.");
 		printf("\n\t-q\t\tQuit (suppress all output and errors)");
+		printf("\n\t-r\t\tRecurse subdirectories");
 	}
 
 }
