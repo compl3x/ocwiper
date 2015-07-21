@@ -9,7 +9,7 @@ Your hard drive/USB stick/floppy disk is a snitch. SDelete is a good application
 4. Usable with software built for SDelete (such as [my GUI](https://github.com/compl3x/SDelete2-FileGone))
 
 #### Not yet implemented
-* Directory support
+* ~~Directory support~~ DONE! 
 * Recursive Directory support
 * -f command
 * Filename scrambling

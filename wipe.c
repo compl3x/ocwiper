@@ -4,9 +4,10 @@
 #include "mtwist.h"
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 #ifndef VERSION
-#define VERSION "1.04"
+#define VERSION "1.07"
 #endif
 
 int isEqual(char first[], char second[]) {
@@ -54,7 +55,7 @@ void wipeFile(char file[], int passes, int keepFile)
 			}
 		}
 		else {
-			printf("\nERROR: Could not access file (re-run with -a flag)");
+			printf("\nERROR: Could not access file %s (re-run with -a flag)",file);
 		}
 }
 
@@ -94,7 +95,29 @@ void main(int argc,char *argv[]) {
 		}
 		printf("\nWipe will perform %d passes.",passes);
 		
-		wipeFile(fileName,passes,keepFile);
+		// If the file is a directory, recurse and wipe first level
+		struct stat path;
+		stat(fileName,&path);
+		if (S_ISDIR(path.st_mode)) {
+			struct dirent *ep;
+			DIR *dp = opendir (fileName);
+			while (ep = readdir (dp)) {
+				stat(ep->d_name,&path);
+				if (S_ISREG(path.st_mode) && !S_ISDIR(path.st_mode)) {
+					char *fullFileName;
+					memset(fullFileName, 0, sizeof fullFileName);
+					
+					// Make the full path
+					strcat(fullFileName,fileName);
+					strcat(fullFileName,"/");
+					strcat(fullFileName,ep->d_name);
+					wipeFile(fullFileName,passes,keepFile);
+				}
+			}
+			
+		} else {
+			wipeFile(fileName,passes,keepFile);
+		}
 	} else {
 		printf("\n\nUsage:\twipe [-p passes] [-k] [-q] [-a] fileName");
 		printf("\n\n\t-p passes\tWipe with X passes. (default is 5)");
