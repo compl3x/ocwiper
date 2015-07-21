@@ -104,8 +104,7 @@ void main(int argc,char *argv[]) {
 			while (ep = readdir (dp)) {
 				stat(ep->d_name,&path);
 				if (S_ISREG(path.st_mode) && !S_ISDIR(path.st_mode)) {
-					char *fullFileName;
-					memset(fullFileName, 0, sizeof fullFileName);
+					char fullFileName[5] = "";
 					
 					// Make the full path
 					strcat(fullFileName,fileName);
