@@ -7,7 +7,7 @@
 #include <dirent.h>
 
 #ifndef VERSION
-#define VERSION "1.07"
+#define VERSION "1.07" 
 #endif
 
 int isEqual(char first[], char second[]) {
