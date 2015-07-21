@@ -8,17 +8,18 @@ Your hard drive/USB stick/floppy disk is a snitch. SDelete is a good application
 3. Easily modifiable
 4. Usable with software built for SDelete (such as [my GUI](https://github.com/compl3x/SDelete2-FileGone))
 
+#### Building
+A script, build.sh, is included in the repo for quick build. it's basically just:
 
 #### Building
 A script, build.sh, is included in the repo for quick build, but it does nothing more than:
 
-    gcc -o wipe wipe.c mtwist.c
-
+    gcc -o ocwiper wipe.c mtwist.c
 
 #### To-Do
 * ~~Directory support~~ DONE! 
 * ~~Recursive Directory support~~ DONE!
-* -f command
+* ~~-f command~~ DONE! Use -a
 * Filename scrambling
 
 
@@ -30,7 +31,7 @@ Removes the read-only attribute from a file (and wipes it)
 ##### -q
 Supress all output/errors
 ##### -p passes
-Overwrite the file a custom number of times (the default is 5, but there is no minimum
+Overwrite the file a custom number of times (the default is 5)
 ##### -r
 Recurse through directories
 
