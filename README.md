@@ -40,4 +40,5 @@ Overwrite the file a custom number of times (the default is 5)
 ##### -r
 Recurse through directories
 
+---
 (c) Michael Cowell, 2015
