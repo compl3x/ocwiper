@@ -10,6 +10,7 @@
 #define VERSION "1.09" 
 #endif
 
+// Returns 1 if first[] and second[] are identical
 int isEqual(char first[], char second[]) {
 	return (strcmp(first,second) == 0);
 }
@@ -23,40 +24,41 @@ long int toInt(char *input) {
 // Main wiping function - 
 void wipeFile(char file[], int passes, int keepFile)
 {
-		// Set up file pointer/generator
-		int wipeCount;
-		if (access(file,W_OK) == 0) {
-			FILE *fp = fopen(file,"rb+");
-			fseek(fp, 0, SEEK_END);
-			int size = ftell(fp);
-			mt_seed();
-			// Some handy information
-			printf("\n\tUsing %i passes",passes);
-			printf("\n\tIn total, we will write %.2f megabytes.\n",((double)size)*passes/1024/1024 );
-			
-			//
-			for (wipeCount = 1; wipeCount <= passes; wipeCount++) {
-				printf("\tPass %i...",wipeCount);
-				fseek(fp, 0, SEEK_SET);
-				int offset;
-				char rand[1];
-				for (offset = 0; offset < size; offset++)
-				{
-					rand[0] = (100* mt_ldrand());
-					fwrite(rand,1,1,fp);
-				}
-				if (wipeCount != passes) {
-					printf("\n\033[F\033[J");
-				}
+	// Set up file pointer/generator
+	int wipeCount;
+	if (access(file,W_OK) == 0) {
+		FILE *fp = fopen(file,"rb+");
+		fseek(fp, 0, SEEK_END);
+		int size = ftell(fp);
+		mt_seed();
+		// Some handy information
+		printf("\n\tUsing %i passes",passes);
+		printf("\n\tIn total, we will write %.2f megabytes.\n",((double)size)*passes/1024/1024 );
+		
+		//Wipe everything
+		for (wipeCount = 1; wipeCount <= passes; wipeCount++) {
+			printf("\tPass %i...",wipeCount);
+			fseek(fp, 0, SEEK_SET);
+			int offset;
+			char rand[1];
+			for (offset = 0; offset < size; offset++)
+			{
+				rand[0] = (100* mt_ldrand());
+				fwrite(rand,1,1,fp);
 			}
-			fclose(fp);
-			if (!keepFile) {
-				unlink(file);
+			if (wipeCount != passes) {
+				printf("\n\033[F\033[J");
 			}
 		}
-		else {
-			printf("\nERROR: Could not access file %s (re-run with -a flag)",file);
+		fclose(fp);
+		// Delete the file if required
+		if (!keepFile) {
+			unlink(file);
 		}
+	}
+	else {
+		printf("\nERROR: Could not access file %s (re-run with -a flag)",file);
+	}
 }
 
 void handleFolder(char* path, int recurse, int passes, int maintain,int removeRO){
