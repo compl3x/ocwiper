@@ -13,10 +13,6 @@ Like SDelete, but open-source, versatile and hackable.
 ---
 A script, build.sh, is included in the repo for quick build. it's basically just:
 
-#### Building
----
-A script, build.sh, is included in the repo for quick build, but it does nothing more than:
-
     gcc -o ocwiper wipe.c mtwist.c
 
 #### To-Do
