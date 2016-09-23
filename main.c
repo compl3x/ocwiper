@@ -6,12 +6,11 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "dirent.h"
+#include <limits.h>
 
 #ifndef VERSION
 #define VERSION "2.01"
 #endif
-
-#define max(x,y) ((x) > (y) ? (x) : (y))
 
 // Returns 1 if first[] and second[] are identical
 int isEqual(char first[], char second[]) {
@@ -32,33 +31,15 @@ int removeAttribute(char* fileName) {
 	return (chmod(fileName,strtol("0777",0,8)) == 0);
 }
 
-int deleteFolder(char folder[], int passes, int recursive) {
-    // Handle top folder
-    DIR* dir;
-    struct dirent *ent;
-    if ( (dir = opendir(folder)) != NULL) {
-        while ( (ent = readdir(dir)) != NULL) {
-            // Delete only the top level
-            if (!recursive) {
-                if (ent->d_type != DT_DIR) {
-                    char fullPath[strlen(folder) + ent->d_namlen + 2];
-                    sprintf(fullPath,"%s/%s",folder,ent->d_name);
-                    deleteFile(fullPath,passes);
-                }
-            }
-        }
-        closedir(dir);
-    }
-}
-
 /*
     Delete a single file
     @return Zero on successful wipe
 */
 int deleteFile(char fileName[], int passes) {
     pcg32_random_t rng;
-    printf("\nWiping file: %s",fileName);
+
     if (access(fileName,W_OK) == 0) {
+        printf("\nWiping %s...",fileName);
         FILE *fp = fopen(fileName,"rb+");
 
         // Move to end of file to get a correct result from ftell
@@ -82,15 +63,46 @@ int deleteFile(char fileName[], int passes) {
         printf("\nERROR: Cannot get write access to file (try running with -a arg)");
         return -1;
     }
-    memset(&fileName[0],0,sizeof(fileName));
     return 0;
+}
+
+void deleteFolder(char folder[], int passes, int recursive) {
+    // Handle top folder
+    DIR* dir;
+    struct dirent *ent;
+    if ( (dir = opendir(folder)) != NULL) {
+        while ( (ent = readdir(dir)) != NULL) {
+            // Delete only the top level
+            if (!recursive) {
+                if (ent->d_type != DT_DIR) {
+                    char * fullPath = malloc(PATH_MAX);
+                    sprintf(fullPath,"%s/%s",folder,ent->d_name);
+                    deleteFile(fullPath,passes);
+                    free(fullPath);
+                }
+            }
+            else {
+                if (strcmp(ent->d_name,".") != 0 && strcmp(ent->d_name,"..") != 0) {
+                    char * fullPath = malloc(PATH_MAX);
+                    sprintf(fullPath,"%s/%s",folder,ent->d_name);
+                    if (ent->d_type == DT_DIR) {
+                        deleteFolder(fullPath,passes,recursive);
+                    }
+                    else {
+                        deleteFile(fullPath,passes);
+                    }
+                    free(fullPath);
+                }
+            }
+        }
+        closedir(dir);
+    }
 }
 
 int main(int argc,char *argv[]) {
 	if (argc >= 1) {
         // Get the filename as the last file
         struct stat sb;
-        printf("\nTarget: %s",argv[argc-1]);
         int ret = stat(argv[argc-1],&sb);
 
         // If target doesn't exist
@@ -98,6 +110,7 @@ int main(int argc,char *argv[]) {
             printf("\nERROR: The specified target does not seem to exist. Exiting...");
             return -1;
         }
+
         // Process arguments
         int passes, isFile, isRecursive;
         passes = 3;
@@ -112,7 +125,7 @@ int main(int argc,char *argv[]) {
             if (isEqual(argv[counter],"-p")) {
                 // Set next arg as the pass count - minimum of 3
                 passes = max(3,toInt(argv[counter+1]));
-                printf("\nWiping file a total of %d times.",passes);
+                printf("\nSet passes to %d.",passes);
             }
             else if (isEqual(argv[counter],"-r")) {
                 // Recursively delete
@@ -124,13 +137,8 @@ int main(int argc,char *argv[]) {
             }
         }
 
-        if (!isRecursive && !isFile) {
-            // TODO: Move into its own function with recurse parameter
-            // Handle top folder
-            deleteFolder(wipeTarget,passes,0);
-        }
-        else if (isRecursive && !isFile) {
-            // Handle folder recursively
+        if (!isFile) {
+            deleteFolder(wipeTarget,passes,isRecursive);
         }
         else {
             deleteFile(wipeTarget,passes);
