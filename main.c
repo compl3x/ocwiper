@@ -32,6 +32,25 @@ int removeAttribute(char* fileName) {
 	return (chmod(fileName,strtol("0777",0,8)) == 0);
 }
 
+int deleteFolder(char folder[], int passes, int recursive) {
+    // Handle top folder
+    DIR* dir;
+    struct dirent *ent;
+    if ( (dir = opendir(folder)) != NULL) {
+        while ( (ent = readdir(dir)) != NULL) {
+            // Delete only the top level
+            if (!recursive) {
+                if (ent->d_type != DT_DIR) {
+                    char fullPath[strlen(folder) + ent->d_namlen + 2];
+                    sprintf(fullPath,"%s/%s",folder,ent->d_name);
+                    deleteFile(fullPath,passes);
+                }
+            }
+        }
+        closedir(dir);
+    }
+}
+
 /*
     Delete a single file
     @return Zero on successful wipe
@@ -63,6 +82,7 @@ int deleteFile(char fileName[], int passes) {
         printf("\nERROR: Cannot get write access to file (try running with -a arg)");
         return -1;
     }
+    memset(&fileName[0],0,sizeof(fileName));
     return 0;
 }
 
@@ -107,17 +127,7 @@ int main(int argc,char *argv[]) {
         if (!isRecursive && !isFile) {
             // TODO: Move into its own function with recurse parameter
             // Handle top folder
-            DIR* dir;
-            struct dirent *ent;
-            if ( (dir = opendir(wipeTarget)) != NULL) {
-                while ( (ent = readdir(dir)) != NULL) {
-                    if (ent->d_type != DT_DIR) {
-                        char fullPath[strlen(wipeTarget) + ent->d_namlen + 2];
-                        sprintf(fullPath,"%s/%s",wipeTarget,ent->d_name);
-                        deleteFile(fullPath,passes);
-                    }
-                }
-            }
+            deleteFolder(wipeTarget,passes,0);
         }
         else if (isRecursive && !isFile) {
             // Handle folder recursively
@@ -139,6 +149,5 @@ int main(int argc,char *argv[]) {
 		printf("\n\t-q\t\tQuit (suppress all output and errors)");
 		printf("\n\t-r\t\tRecurse subdirectories");
 	}
-	getchar();
 	return 0;
 }
