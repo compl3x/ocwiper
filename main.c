@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "dirent.h"
 
 #ifndef VERSION
 #define VERSION "2.01"
@@ -31,17 +32,19 @@ int removeAttribute(char* fileName) {
 	return (chmod(fileName,strtol("0777",0,8)) == 0);
 }
 
-/* Delete a single file
+/*
+    Delete a single file
+    @return Zero on successful wipe
 */
-void deleteFile(char fileName[], int passes) {
+int deleteFile(char fileName[], int passes) {
     pcg32_random_t rng;
-
+    printf("\nWiping file: %s",fileName);
     if (access(fileName,W_OK) == 0) {
         FILE *fp = fopen(fileName,"rb+");
-        fseek(fp, 0, SEEK_END);
 
+        // Move to end of file to get a correct result from ftell
+        fseek(fp, 0, SEEK_END);
         int fileSize = ftell(fp);
-        printf("\nFilesize: %d",fileSize);
 
         // Wipe file
         int wipeCounter;
@@ -58,21 +61,23 @@ void deleteFile(char fileName[], int passes) {
     }
     else {
         printf("\nERROR: Cannot get write access to file (try running with -a arg)");
+        return -1;
     }
-
+    return 0;
 }
 
 int main(int argc,char *argv[]) {
-	if (argc >= 2) {
+	if (argc >= 1) {
         // Get the filename as the last file
         struct stat sb;
+        printf("\nTarget: %s",argv[argc-1]);
         int ret = stat(argv[argc-1],&sb);
+
         // If target doesn't exist
         if (ret < 0) {
             printf("\nERROR: The specified target does not seem to exist. Exiting...");
             return -1;
         }
-
         // Process arguments
         int passes, isFile, isRecursive;
         passes = 3;
@@ -81,7 +86,6 @@ int main(int argc,char *argv[]) {
 
         // Store target
         char * wipeTarget = argv[argc-1];
-
 
         int counter;
         for (counter = 0; counter < argc; counter++) {
@@ -100,17 +104,29 @@ int main(int argc,char *argv[]) {
             }
         }
 
-        if (isRecursive) {
-            // Do folder handling
-            printf("\nFolder");
+        if (!isRecursive && !isFile) {
+            // TODO: Move into its own function with recurse parameter
+            // Handle top folder
+            DIR* dir;
+            struct dirent *ent;
+            if ( (dir = opendir(wipeTarget)) != NULL) {
+                while ( (ent = readdir(dir)) != NULL) {
+                    if (ent->d_type != DT_DIR) {
+                        char fullPath[strlen(wipeTarget) + ent->d_namlen + 2];
+                        sprintf(fullPath,"%s/%s",wipeTarget,ent->d_name);
+                        deleteFile(fullPath,passes);
+                    }
+                }
+            }
+        }
+        else if (isRecursive && !isFile) {
+            // Handle folder recursively
         }
         else {
-            // Do file handling with wipeTarget
             deleteFile(wipeTarget,passes);
         }
 
-        printf("\nIs file: %d",isFile);
-        printf("\nPasses: %d",passes);
+        //printf("\n passes = %d, isRecursive = %d, isFile = %d",passes,isRecursive,isFile);
 
 
 
@@ -123,5 +139,6 @@ int main(int argc,char *argv[]) {
 		printf("\n\t-q\t\tQuit (suppress all output and errors)");
 		printf("\n\t-r\t\tRecurse subdirectories");
 	}
+	getchar();
 	return 0;
 }
