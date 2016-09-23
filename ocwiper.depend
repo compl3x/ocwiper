@@ -1,0 +1,36 @@
+# depslib dependency file v1.0
+1474656057 source:e:\libraries\desktop\ocwiper\main.c
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	"mtwist.h"
+	<unistd.h>
+	<sys/stat.h>
+	"dirent.h"
+
+1437557555 e:\libraries\desktop\ocwiper\mtwist.h
+	<stdio.h>
+	<iostream>
+	<stdint.h>
+
+1474655595 e:\libraries\desktop\ocwiper\dirent.h
+	<stdio.h>
+	<stdarg.h>
+	<windef.h>
+	<winbase.h>
+	<wchar.h>
+	<string.h>
+	<stdlib.h>
+	<malloc.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<errno.h>
+
+1437557555 source:e:\libraries\desktop\ocwiper\mtwist.c
+	<inttypes.h>
+	<stdio.h>
+	<stdlib.h>
+	<sys/timeb.h>
+	<sys/time.h>
+	"mtwist.h"
+
