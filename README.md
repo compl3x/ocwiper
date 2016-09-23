@@ -20,6 +20,8 @@ Version 2 features a more readable rewrite of the initial code, as well as the r
 * ~~(Recursive) directory support~~
 * ~~Read-only forcing~~
 * Filename scrambling
+* Read-only fix
+* Keep file option
 
 #### Program Flags
 ---
