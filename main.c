@@ -7,10 +7,17 @@
 #include <unistd.h>
 #include "dirent.h"
 #include <limits.h>
+#include <errno.h>
 
 #ifndef VERSION
-#define VERSION "2.01"
+    #define VERSION "2.01"
 #endif
+
+// This is set to 1 when -k is supplied - controls whether or not files are kept after deletion
+int keepFiles = 0;
+
+// This is set to 1 when -a is supplied - controls whether we chmod files to attempt to gain write access
+int forceFiles = 0;
 
 // Returns 1 if first[] and second[] are identical
 int isEqual(char first[], char second[]) {
@@ -40,6 +47,12 @@ int deleteFile(char fileName[], int passes) {
 
     if (access(fileName,W_OK) == 0) {
         printf("\nWiping %s...",fileName);
+
+        // chmod if requested (-a)
+        if (forceFiles) {
+            removeAttribute(fileName);
+        }
+
         FILE *fp = fopen(fileName,"rb+");
 
         // Move to end of file to get a correct result from ftell
@@ -58,9 +71,14 @@ int deleteFile(char fileName[], int passes) {
             }
         }
         fclose(fp);
+
+        if (!keepFiles) {
+            unlink(fileName);
+            printf("\nDeleted %s",fileName);
+        }
     }
     else {
-        printf("\nERROR: Cannot get write access to file (try running with -a arg)");
+        printf("\nERROR: Cannot get write access to %s (try running with -a arg)",fileName);
         return -1;
     }
     return 0;
@@ -73,34 +91,40 @@ void deleteFolder(char folder[], int passes, int recursive) {
     if ( (dir = opendir(folder)) != NULL) {
         while ( (ent = readdir(dir)) != NULL) {
             // Delete only the top level
+
+            char * fullPath = malloc(PATH_MAX);
+            sprintf(fullPath,"%s/%s",folder,ent->d_name);
+
             if (!recursive) {
                 if (ent->d_type != DT_DIR) {
-                    char * fullPath = malloc(PATH_MAX);
-                    sprintf(fullPath,"%s/%s",folder,ent->d_name);
                     deleteFile(fullPath,passes);
-                    free(fullPath);
                 }
             }
             else {
                 if (strcmp(ent->d_name,".") != 0 && strcmp(ent->d_name,"..") != 0) {
-                    char * fullPath = malloc(PATH_MAX);
-                    sprintf(fullPath,"%s/%s",folder,ent->d_name);
                     if (ent->d_type == DT_DIR) {
                         deleteFolder(fullPath,passes,recursive);
                     }
                     else {
                         deleteFile(fullPath,passes);
                     }
-                    free(fullPath);
                 }
             }
+            free(fullPath);
         }
         closedir(dir);
+
+        if (!keepFiles) {
+            rmdir(folder);
+            if (errno == ENOTEMPTY) {
+                printf("\nWARNING: UNABLE TO DELETE FOLDER AS FILE(S) MIGHT STILL EXIST.");
+            }
+        }
     }
 }
 
 int main(int argc,char *argv[]) {
-	if (argc >= 1) {
+	if (argc >= 2) {
         // Get the filename as the last file
         struct stat sb;
         int ret = stat(argv[argc-1],&sb);
@@ -135,6 +159,12 @@ int main(int argc,char *argv[]) {
                 }
                 isRecursive = 1;
             }
+            else if (isEqual(argv[counter],"-a")) {
+                forceFiles = 1;
+            }
+            else if (isEqual(argv[counter],"-k")) {
+                keepFiles = 1;
+            }
         }
 
         if (!isFile) {
@@ -153,8 +183,7 @@ int main(int argc,char *argv[]) {
 		printf("\n\nUsage:\tocwiper [-p passes] [-k] [-q] [-a] [-r] target");
 		printf("\n\n\t-p passes\tWipe with X passes. (default is 5)");
 		printf("\n\t-k\t\tKeep File after shredding");
-		printf("\n\t-a\t\tRemove read-only attribute.");
-		printf("\n\t-q\t\tQuit (suppress all output and errors)");
+		printf("\n\t-a\t\tRemove read-only attribute. (EXPERIMENTAL)");
 		printf("\n\t-r\t\tRecurse subdirectories");
 	}
 	return 0;
