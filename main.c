@@ -188,26 +188,19 @@ int main(int argc,char *argv[]) {
 
         // Store target
         char * wipeTarget = argv[argc-1];
-
-        int counter;
-        for (counter = 0; counter < argc; counter++) {
-            if (isEqual(argv[counter],"-p")) {
-                // Set next arg as the pass count - minimum of 3
-                passes = max(3,toInt(argv[counter+1]));
-                printf("\nSet passes to %d.",passes);
-            }
-            else if (isEqual(argv[counter],"-r") || isEqual(argv[counter],"-s")) {
-                // Recursively delete
-                if (isFile) {
-                    printf("\nERROR: Expecting folder, given file. Exiting...");
-                    return -2;
-                }
+        int c;
+        while ((c = getopt(argc, argv, "kasrp:")) != -1) {
+            switch(c) {
+            case 'p':
+                passes = toInt(optarg);
+                printf("\nocwiper is set for %d passes.",passes);
+                break;
+            case 'r':
+            case 's':
                 isRecursive = 1;
-            }
-            else if (isEqual(argv[counter],"-a")) {
+            case 'a':
                 forceFiles = 1;
-            }
-            else if (isEqual(argv[counter],"-k")) {
+            case 'k':
                 keepFiles = 1;
             }
         }
@@ -218,11 +211,6 @@ int main(int argc,char *argv[]) {
         else {
             deleteFile(wipeTarget,passes);
         }
-
-        //printf("\n passes = %d, isRecursive = %d, isFile = %d",passes,isRecursive,isFile);
-
-
-
 	} else {
 		printf("\nocwiper %s by Michael Cowell (2015)\n",VERSION);
 		printf("\n\nUsage:\tocwiper [-p passes] [-k] [-q] [-a] [-r] target");
