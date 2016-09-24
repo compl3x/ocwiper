@@ -8,6 +8,7 @@
 #include "dirent.h"
 #include <limits.h>
 #include <errno.h>
+#include <libgen.h>
 
 #ifndef VERSION
     #define VERSION "2.01"
@@ -36,6 +37,53 @@ long int toInt(char *input) {
 */
 int removeAttribute(char* fileName) {
 	return (chmod(fileName,strtol("0777",0,8)) == 0);
+}
+
+/*
+    Rand range implementation slightly modified from: http://stackoverflow.com/a/2509699
+*/
+unsigned int
+randr(unsigned int min, unsigned int max)
+{
+       double scaled = (double)rand()/RAND_MAX;
+
+       return (scaled*RAND_MAX) == max ? randr(min,max) : (max - min +1)*scaled + min;
+}
+
+void scrambleName(char filename[],int scrambleCount) {
+	// The length of the scrambled file names
+	// Change this if you want, but DO NOT in some way (strlen etc) connect it
+	// to the original filename.
+	const int SCRAMBLED_FILE_NAME = 5;
+
+	if (scrambleCount > 0) {
+		char *result = strstr(filename,basename(filename));
+		int position = result - filename;
+		// Where to store the filename
+		char path[PATH_MAX - strlen(result)];
+		strncpy(path,filename,position);
+
+		// Make up new name
+		char newFileName[SCRAMBLED_FILE_NAME];
+		strncpy(newFileName,basename(filename),SCRAMBLED_FILE_NAME);
+
+		int i;
+		for (i = 0; i < strlen(newFileName); i++) {
+			newFileName[i] = randr(97,122);
+		}
+
+		// The new name is the same length as the original, so strlen(filename) works fine
+		char fullNewName[strlen(filename)];
+		sprintf(fullNewName,"%s%s",path,newFileName);
+		rename(filename,fullNewName);
+		scrambleName(fullNewName,--scrambleCount);
+		free(result);
+	}
+	else {
+        if (!keepFiles) {
+            unlink(filename);
+        }
+	}
 }
 
 /*
@@ -73,8 +121,8 @@ int deleteFile(char fileName[], int passes) {
         fclose(fp);
 
         if (!keepFiles) {
-            unlink(fileName);
-            printf("\nDeleted %s",fileName);
+            printf("\nScrambling and deleting %s...",fileName);
+            scrambleName(fileName,25);
         }
     }
     else {
