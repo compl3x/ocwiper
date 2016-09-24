@@ -11,7 +11,7 @@
 #include <libgen.h>
 
 #ifndef VERSION
-    #define VERSION "2.01"
+    #define VERSION "2.05"
 #endif
 
 // This is set to 1 when -k is supplied - controls whether or not files are kept after deletion
