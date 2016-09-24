@@ -19,7 +19,7 @@ Version 2 features a more readable rewrite of the initial code, as well as the r
 * ~~File deletion~~
 * ~~(Recursive) directory support~~
 * ~~Read-only forcing~~
-* Filename scrambling
+* ~~Filename scrambling
 * Read-only fix
 * Keep file option
 
