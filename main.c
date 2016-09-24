@@ -11,7 +11,7 @@
 #include <libgen.h>
 
 #ifndef VERSION
-    #define VERSION "2.05"
+    #define VERSION "2.06"
 #endif
 
 // This is set to 1 when -k is supplied - controls whether or not files are kept after deletion
@@ -47,7 +47,7 @@ randr(unsigned int min, unsigned int max)
 {
        double scaled = (double)rand()/RAND_MAX;
 
-       return (scaled*RAND_MAX) == max ? randr(min,max) : (max - min +1)*scaled + min;
+       return (max - min +1)*scaled + min;
 }
 
 void scrambleName(char filename[],int scrambleCount) {
@@ -77,13 +77,10 @@ void scrambleName(char filename[],int scrambleCount) {
 		sprintf(fullNewName,"%s%s",path,newFileName);
 		rename(filename,fullNewName);
 		scrambleName(fullNewName,--scrambleCount);
-		free(result);
 	}
-	else {
-        if (!keepFiles) {
+	if (!keepFiles) {
             unlink(filename);
-        }
-	}
+    }
 }
 
 /*
@@ -199,7 +196,7 @@ int main(int argc,char *argv[]) {
                 passes = max(3,toInt(argv[counter+1]));
                 printf("\nSet passes to %d.",passes);
             }
-            else if (isEqual(argv[counter],"-r")) {
+            else if (isEqual(argv[counter],"-r") || isEqual(argv[counter],"-s")) {
                 // Recursively delete
                 if (isFile) {
                     printf("\nERROR: Expecting folder, given file. Exiting...");
