@@ -11,7 +11,9 @@ Like SDelete, but open-source, versatile and hackable.
 
 #### Version 2
 
-Version 2 features a more readable rewrite of the initial code, as well as the replacement of mtwist with pcg for our data generator
+Version 2 features a more readable rewrite of the initial code, as well as the replacement of mtwist with pcg for our data generator.
+
+It also includes an automatic filename scrambler
 
 #### To-Do (version 2)
 ---
@@ -19,9 +21,9 @@ Version 2 features a more readable rewrite of the initial code, as well as the r
 * ~~File deletion~~
 * ~~(Recursive) directory support~~
 * ~~Read-only forcing~~
-* Filename scrambling
+* ~~Filename scrambling~~
 * Read-only fix
-* Keep file option
+* ~~Keep file option~~
 
 #### Program Flags
 ---
