@@ -101,7 +101,7 @@ void deleteFolder(char folder[], int passes, int recursive) {
                 }
             }
             else {
-                if (strcmp(ent->d_name,".") != 0 && strcmp(ent->d_name,"..") != 0) {
+                if (!isEqual(ent->d_name,".") && !isEqual(ent->d_name,"..")) {
                     if (ent->d_type == DT_DIR) {
                         deleteFolder(fullPath,passes,recursive);
                     }

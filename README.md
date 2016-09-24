@@ -29,8 +29,6 @@ Version 2 features a more readable rewrite of the initial code, as well as the r
 Keeps the file after wiping
 ##### -a
 Removes the read-only attribute from a file (and wipes it)
-##### -q
-Supress all output/errors
 ##### -p passes
 Overwrite the file a custom number of times (the default is 5)
 ##### -r
